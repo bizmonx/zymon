@@ -1,0 +1,63 @@
+/* body classes definitions */
+body {
+    color: #5cd5fb;
+    background-color: #282828;
+ /*
+ color: #D8D8BF;
+ background-color: black;
+ background-repeat: repeat-y;
+ */
+}
+
+/*table[summary="Topline"] {
+    background-color: #124ab963;
+}
+*/
+
+.topline {
+    border-bottom: 0.1rem solid #5cd5fb54;
+}
+
+.eventstable td {
+    background-color: unset; 
+    color: unset
+}
+
+.eventstable tr {
+    background-color: unset;
+}
+
+
+.eventstable {
+    border-spacing: 0;
+    border-collapse: separate;
+    border-radius: 10px;
+    border: 1px solid black;
+    margin-left: 40px;
+    margin-right: 40px;
+    background-color: #1f2c33;
+    width: 80%;
+    /*color: white;*/
+   }
+   
+   /* Apply a border to the right of all but the last column */
+   .eventstable th:not(:last-child),
+   .eventstable td:not(:last-child) {
+    border-right: 1px solid black;
+   }
+   
+   /* Apply a border to the bottom of all but the last row */
+   .eventstable>thead>tr:not(:last-child)>th,
+   .eventstable>thead>tr:not(:last-child)>td,
+   .eventstable>tbody>tr:not(:last-child)>th,
+   .eventstable>tbody>tr:not(:last-child)>td,
+   .eventstable>tfoot>tr:not(:last-child)>th,
+   .eventstable>tfoot>tr:not(:last-child)>td,
+   .eventstable>tr:not(:last-child)>td,
+   .eventstable>tr:not(:last-child)>th,
+   .eventstable>thead:not(:last-child),
+   .eventstable>tbody:not(:last-child),
+   .eventstable>tfoot:not(:last-child) {
+    border-bottom: 1px solid black;
+   }
+   

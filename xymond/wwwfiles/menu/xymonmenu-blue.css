@@ -1,0 +1,21 @@
+.navbar-brand {
+	font-weight: 900;
+	background-color: #212121;
+}
+.xnavbar {
+	background-color: #212121 !important;
+}
+
+.nav-link {
+	color: #FFFFF0;
+
+}
+
+.navbar-nav .nav-link.active, .navbar-nav .nav-link.show {
+	color: grey;
+}
+
+a:hover {
+    /*background-color: grey;*/
+    color: grey !important;
+}
