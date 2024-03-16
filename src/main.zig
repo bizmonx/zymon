@@ -2,6 +2,7 @@ const std = @import("std");
 const zap = @import("zap");
 const Mustache = @import("zap").Mustache;
 pub const xymon = @import("xymon/xymon.zig");
+
 var routes: std.StringHashMap(zap.HttpRequestFn) = undefined;
 
 fn dispatch_routes(r: zap.Request) void {
@@ -86,13 +87,37 @@ fn get_home(r: zap.Request) void {
 }
 
 fn send_xymon(r: zap.Request) void {
+    const xymon_env_hostname = "XYMON_HOST";
+    const xymon_env_port = "XYMON_PORT";
+
+    // Attempt to read the first environment variable
+    const xymon_host = std.os.getenv(xymon_env_hostname) orelse {
+        std.debug.print("Environment variable '{s}' not found.\n", .{xymon_env_hostname});
+        return;
+    };
+
+    // Attempt to read the second environment variable
+    const xymon_port_str = std.os.getenv(xymon_env_port) orelse {
+        std.debug.print("Environment variable '{s}' not found.\n", .{xymon_env_port});
+        return;
+    };
+
+    const xymon_port = std.fmt.parseInt(u16, xymon_port_str, 10) catch {
+        std.debug.print("Failed to parse '{d}' as u32.\n", .{xymon_port_str});
+        return;
+    };
+
+    // Print the values of the environment variables
+    std.debug.print("Value of {s} is '{s}'\n", .{ xymon_env_hostname, xymon_host });
+    std.debug.print("Value of {s} is '{d}'\n", .{ xymon_env_port, xymon_port });
+
     var mustache = Mustache.fromFile("view/hoststatus.html") catch return;
     defer mustache.deinit();
     var allocator = std.heap.page_allocator; // General-purpose allocator
 
     var server = xymon.XymonServer{
-        .host = "127.0.0.1",
-        .port = 1985,
+        .host = xymon_host,
+        .port = xymon_port,
     };
 
     const message = xymon.XymonMessage{ .endpoint = xymon.Endpoint.xymondboard, .host = "7b5d6e9c4ad9", .testname = "zig" };
