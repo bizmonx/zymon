@@ -1,6 +1,7 @@
 const std = @import("std");
 const zap = @import("zap");
 const Mustache = @import("zap").Mustache;
+const xschema = @import("xymon/schema.zig");
 pub const xymon = @import("xymon/xymon.zig");
 
 var routes: std.StringHashMap(zap.HttpRequestFn) = undefined;
@@ -8,17 +9,16 @@ var routes: std.StringHashMap(zap.HttpRequestFn) = undefined;
 fn dispatch_routes(r: zap.Request) void {
     // dispatch
     if (r.path) |the_path| {
-        if (routes.get(the_path)) |foo| {
-            foo(r);
+        if (routes.get(the_path)) |route| {
+            route(r);
             return;
         }
     }
-    // or default: present menu
+    // or default: present fallback
     r.sendBody(
         \\ <html>
         \\   <body>
-        \\     <p><a href="/static">static</a></p>
-        \\     <p><a href="/dynamic">dynamic</a></p>
+        \\     <p>This is not the page you are looking for...</p>
         \\   </body>
         \\ </html>
     ) catch return;
@@ -68,11 +68,45 @@ fn get_users(r: zap.Request) void {
     }
 }
 
+fn readFileToString(allocator: *std.mem.Allocator, path: []const u8) []u8 {
+    // Attempt to open the file, return an empty string on failure
+    const file = std.fs.cwd().openFile(path, .{}) catch |err| {
+        std.debug.print("Failed to open file: {}\n", .{err});
+        return &[_]u8{};
+    };
+    defer file.close();
+
+    // Attempt to read the file, return an empty string on failure
+    const fileSize = file.getEndPos() catch |err| {
+        std.debug.print("Failed to get file size: {}\n", .{err});
+        return &[_]u8{};
+    };
+
+    var buffer = allocator.alloc(u8, fileSize) catch |err| {
+        std.debug.print("Failed to allocate buffer: {}\n", .{err});
+        return &[_]u8{};
+    };
+    //defer allocator.free(buffer);
+
+    // Attempt to read the file into the buffer
+    _ = file.read(buffer) catch |err| {
+        std.debug.print("Failed to read file: {}\n", .{err});
+        return &[_]u8{};
+    };
+
+    return buffer;
+}
+
 fn get_home(r: zap.Request) void {
-    var mustache = Mustache.fromFile("view/index.html") catch return;
+    var allocator = std.heap.page_allocator;
+    const navbarTemplate = readFileToString(&allocator, "view/components/navbar/index.html");
+
+    defer allocator.free(navbarTemplate);
+
+    var mustache = Mustache.fromFile("view/layout/index.html") catch return;
     defer mustache.deinit();
 
-    const ret = mustache.build(.{});
+    const ret = mustache.build(.{ .navbar = navbarTemplate });
     defer ret.deinit();
 
     if (r.setContentType(.HTML)) {
@@ -111,16 +145,16 @@ fn send_xymon(r: zap.Request) void {
     std.debug.print("Value of {s} is '{s}'\n", .{ xymon_env_hostname, xymon_host });
     std.debug.print("Value of {s} is '{d}'\n", .{ xymon_env_port, xymon_port });
 
-    var mustache = Mustache.fromFile("view/hoststatus.html") catch return;
+    var mustache = Mustache.fromFile("view/components/status/index.html") catch return;
     defer mustache.deinit();
     var allocator = std.heap.page_allocator; // General-purpose allocator
 
-    var server = xymon.XymonServer{
+    var server = xschema.XymonServer{
         .host = xymon_host,
         .port = xymon_port,
     };
 
-    const message = xymon.XymonMessage{ .endpoint = xymon.Endpoint.xymondboard, .host = "7b5d6e9c4ad9", .testname = "zig" };
+    const message = xschema.XymonMessage{ .endpoint = xschema.Endpoint.xymondboard, .host = "7b5d6e9c4ad9", .testname = "zig" };
 
     const resp = xymon.send_request(&allocator, message, server) catch return;
     defer allocator.free(resp);

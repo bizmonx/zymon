@@ -1,3 +1,8 @@
+@font-face {
+    font-family: 'Orbitron-Bold';
+    src: url('font/Orbitron-Bold.woff2') format('woff2');
+}
+
 #messages {
     background-color: red;
     display: none;
@@ -10,4 +15,15 @@
     padding: 10px; /* optional, for some spacing */
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* optional, for a subtle shadow */
 
+}
+
+.navbar {
+    background-color: #c18004 !important;  /* #b27306 #c18004 */
+    color: #222;
+    font-family: 'Orbitron-Bold', 'Times New Roman';
+}
+
+body {
+    background-color: #222 !important;
+    padding-top: 60px;
 }
