@@ -1,0 +1,19 @@
+<h1>Status</h1>
+<table class="table">
+    <thead>
+        <tr>        
+            <th scope="col">host</th>
+            <th scope="col">test</th>
+            <th scope="col">color</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#responses}}
+        <tr>
+            <th scope="row">{{host}}</th>
+            <td>{{& testname}}</td>
+            <td>{{color}}</td>
+        </tr>
+        {{/responses}}
+    </tbody>
+</table>    

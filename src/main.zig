@@ -26,10 +26,10 @@ fn dispatch_routes(r: zap.Request) void {
 fn setup_routes(a: std.mem.Allocator) !void {
     routes = std.StringHashMap(zap.HttpRequestFn).init(a);
     try routes.put("/", get_home);
-    try routes.put("/users", get_users);
     try routes.put("/xymon", send_xymon);
 }
 
+// straight from the zap examples, keeping it for ref for now
 fn get_users(r: zap.Request) void {
     var mustache = Mustache.fromFile("view/users.html") catch return;
     defer mustache.deinit();
@@ -86,7 +86,7 @@ fn get_home(r: zap.Request) void {
 }
 
 fn send_xymon(r: zap.Request) void {
-    var mustache = Mustache.fromFile("view/error.html") catch return;
+    var mustache = Mustache.fromFile("view/hoststatus.html") catch return;
     defer mustache.deinit();
     var allocator = std.heap.page_allocator; // General-purpose allocator
 
@@ -100,7 +100,7 @@ fn send_xymon(r: zap.Request) void {
     const resp = xymon.send_request(&allocator, message, server) catch return;
     defer allocator.free(resp);
 
-    const ret = mustache.build(.{ .msg = resp });
+    const ret = mustache.build(.{ .responses = resp });
 
     defer ret.deinit();
 
