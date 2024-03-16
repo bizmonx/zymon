@@ -1,10 +1,10 @@
 const std = @import("std");
 
-const CFlags = &.{};
 // Although this function looks imperative, note that its job is to
 // declaratively construct a build graph that will be executed by an external
 // runner.
 pub fn build(b: *std.Build) void {
+
     // Standard target options allows the person running `zig build` to choose
     // what target to build for. Here we do not override the defaults, which
     // means any target is allowed, and the default is native. Other options
@@ -36,22 +36,17 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-
+    const zap = b.dependency("zap", .{
+        .target = target,
+        .optimize = optimize,
+        .openssl = false, // set to true to enable TLS support
+    });
+    exe.addModule("zap", zap.module("zap"));
+    exe.linkLibrary(zap.artifact("facil.io"));
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
     // step when running `zig build`).
     b.installArtifact(exe);
-
-    exe.addCSourceFile(.{
-        .file = .{
-            .path = "lib/holidays.c",
-        },
-        .flags = CFlags,
-    });
-
-    exe.addIncludePath(.{
-        .path = "include/",
-    });
 
     // This *creates* a Run step in the build graph, to be executed when another
     // step is evaluated that depends on it. The next line below will establish

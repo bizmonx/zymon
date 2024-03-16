@@ -15,6 +15,10 @@
     // Once all dependencies are fetched, `zig build` no longer requires
     // internet connectivity.
     .dependencies = .{
+        .zap = .{
+            .url = "https://github.com/zigzap/zap/archive/refs/tags/v0.5.1.tar.gz",
+            .hash = "1220d4802fb09d4e99c0e7265f90d6f3cfdc3e5e31c1b05f0924ee2dd26d9d6dbbf4",
+        },
         // See `zig fetch --save <url>` for a command-line interface for adding dependencies.
         //.example = .{
         //    // When updating this field to a new URL, be sure to delete the corresponding

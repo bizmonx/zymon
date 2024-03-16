@@ -1,0 +1,13 @@
+#messages {
+    background-color: red;
+    display: none;
+    position: fixed;
+    top: 10px;
+    left: 30px;
+    right: 10px;
+    width: 90%; /* or any specific width */
+    z-index: 1000; /* high value to ensure it's on top */
+    padding: 10px; /* optional, for some spacing */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* optional, for a subtle shadow */
+
+}
