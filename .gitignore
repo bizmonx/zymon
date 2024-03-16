@@ -2,3 +2,4 @@ zig-cache/
 zig-out/
 bin/
 dist/
+zig-out/bin/
