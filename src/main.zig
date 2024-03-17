@@ -6,6 +6,8 @@ pub const xymon = @import("xymon/xymon.zig");
 
 var routes: std.StringHashMap(zap.HttpRequestFn) = undefined;
 
+pub const XTest = struct { testname: []const u8 };
+
 fn dispatch_routes(r: zap.Request) void {
     // dispatch
     if (r.path) |the_path| {
@@ -218,8 +220,17 @@ fn send_xymon(r: zap.Request) void {
     //         std.debug.print("err: {}\n", .{err});
     //     }
     // }
+    var testnames = allocator.alloc(XTest, 16) catch |err| {
+        std.debug.print("err: {}\n", .{err});
+        std.os.exit(1);
+    };
+    for (resp, 0..) |item, i| {
+        testnames[i] = XTest{ .testname = item.testname };
+    }
 
-    const ret = mustache.build(.{ .responses = resp });
+    defer allocator.free(testnames);
+
+    const ret = mustache.build(.{ .responses = resp, .columns = testnames });
 
     defer ret.deinit();
 

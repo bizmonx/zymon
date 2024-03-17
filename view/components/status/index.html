@@ -2,20 +2,20 @@
     <h1>Status</h1>
     <table class="table statustable">
         <thead>
-            <tr class="tablehead">        
-                <th scope="col">host</th>
-                <th scope="col">test</th>
-                <th scope="col">color</th>
+            <tr class="tablehead">     
+                <th scope="col">hostname</th>   
+            {{#columns}}
+                <th scope="col">{{testname}}</th>
+            {{/columns}}
             </tr>
         </thead>
         <tbody>
-            {{#responses}}
             <tr>
                 <th class="rowhead" scope="row">{{responses.host}}</th>
-                <td>{{& testname}}</td>
-                <td>{{color}}</td>
-            </tr>
+            {{#responses}}
+                <td>{{& color}}</td>
             {{/responses}}
+            </tr>
         </tbody>
     </table>        
 </div>
