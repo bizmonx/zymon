@@ -2,7 +2,10 @@
     font-family: 'Orbitron-Bold';
     src: url('font/Orbitron-Bold.woff2') format('woff2');
 }
-
+body {
+    background-color: #181818 !important; /*#222 !important; */
+    padding-top: 80px;
+}
 #messages {
     background-color: red;
     display: none;
@@ -18,12 +21,42 @@
 }
 
 .navbar {
-    background-color: #c18004 !important;  /* #b27306 #c18004 */
+    background-color: #b27306 !important;  /* #b27306 #c18004 */
     color: #222;
     font-family: 'Orbitron-Bold', 'Times New Roman';
 }
+.statusrow, .statutable {
+    /*background-color: #222 ;*/
+    color: #ff7800;
+    font-family: monospace;
+}
 
-body {
+.tablehead {
+    background-color: #ff7800 !important;
+    color:  #222 !important;
+    
+}
+.statustable  {
+       border-radius: 15px 15px 0px 0px !important;
+       overflow: hidden;
+ 
+}
+.rowhead {
+    color: #ff7800 !important;
+}
+
+.rowhead, .statustable {
     background-color: #222 !important;
-    padding-top: 60px;
+    
+}
+
+.statustable {
+    color: white !important;
+    background-color: #222 !important;
+
+}
+
+.table>:not(caption)>*>*{
+    color: unset;
+    background-color: unset;
 }

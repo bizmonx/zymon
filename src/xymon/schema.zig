@@ -43,6 +43,11 @@ pub const Color = enum {
     }
 };
 
+pub const XymonResponses = struct {
+    host: []const u8,
+    results: []XymonResponse,
+};
+
 pub const XymonServer = struct {
     host: []const u8,
     port: u16,

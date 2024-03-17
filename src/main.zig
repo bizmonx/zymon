@@ -98,7 +98,8 @@ fn readFileToString(allocator: *std.mem.Allocator, path: []const u8) []u8 {
 }
 
 fn get_home(r: zap.Request) void {
-    var allocator = std.heap.page_allocator;
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var allocator = gpa.allocator();
     const navbarTemplate = readFileToString(&allocator, "view/components/navbar/index.html");
 
     defer allocator.free(navbarTemplate);
@@ -147,7 +148,8 @@ fn send_xymon(r: zap.Request) void {
 
     var mustache = Mustache.fromFile("view/components/status/index.html") catch return;
     defer mustache.deinit();
-    var allocator = std.heap.page_allocator; // General-purpose allocator
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var allocator = gpa.allocator(); // General-purpose allocator
 
     var server = xschema.XymonServer{
         .host = xymon_host,
@@ -156,8 +158,66 @@ fn send_xymon(r: zap.Request) void {
 
     const message = xschema.XymonMessage{ .endpoint = xschema.Endpoint.xymondboard, .host = "7b5d6e9c4ad9", .testname = "zig" };
 
-    const resp = xymon.send_request(&allocator, message, server) catch return;
+    var resp = xymon.send_request(&allocator, message, server) catch return;
     defer allocator.free(resp);
+
+    var hostMap = std.StringHashMap(std.ArrayList(xschema.XymonResponse)).init(allocator);
+
+    for (resp) |response| {
+        var v = hostMap.getOrPut(response.host) catch |err| {
+            std.debug.print("err: {}\n", .{err});
+            return;
+        };
+        if (!v.found_existing) {
+            var valueMap = std.ArrayList(xschema.XymonResponse).init(allocator);
+            v.value_ptr.* = valueMap;
+
+            var n = valueMap.append(response);
+            if (n) |value| {
+                std.debug.print("cool! {}\n", .{value});
+            } else |err| {
+                std.debug.print("err: {}\n", .{err});
+            }
+        }
+        var n = v.value_ptr.*.append(response);
+        if (n) |value| {
+            std.debug.print("cool! {}\n", .{value});
+        } else |err| {
+            std.debug.print("err: {}\n", .{err});
+        }
+    }
+    var columns = std.ArrayList(struct { value: []const u8 }).init(allocator);
+    defer columns.deinit();
+
+    var iter = hostMap.iterator();
+    while (iter.next()) |item| {
+        std.debug.print("hostname: {s}\n", .{item.key_ptr.*});
+        var testiter = item.value_ptr.*.items;
+        for (testiter) |value| {
+            var d = value.testname;
+            std.debug.print("testname: {s}\n", .{d});
+            var n = columns.append(.{ .value = d });
+            if (n) |vae| {
+                _ = vae;
+            } else |err| {
+                std.debug.print("err: {}\n", .{err});
+            }
+        }
+    }
+
+    // var columns = std.ArrayList([]const u8).init(allocator);
+    // defer columns.deinit();
+
+    // var keys = ncolumns.keyIterator();
+
+    // while (keys.next()) |k| {
+    //     var p = columns.append(k.*);
+    //     if (p) |val| {
+    //         _ = val;
+    //     } else |err| {
+    //         std.debug.print("err: {}\n", .{err});
+    //     }
+    // }
 
     const ret = mustache.build(.{ .responses = resp });
 
@@ -175,7 +235,8 @@ fn send_xymon(r: zap.Request) void {
 }
 
 pub fn main() !void {
-    try setup_routes(std.heap.page_allocator);
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    try setup_routes(gpa.allocator());
     var listener = zap.HttpListener.init(.{
         .port = 3000,
         .on_request = dispatch_routes,
