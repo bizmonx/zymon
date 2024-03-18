@@ -8,6 +8,8 @@ var routes: std.StringHashMap(zap.HttpRequestFn) = undefined;
 
 pub const XTest = struct { testname: []const u8 };
 
+pub const XHostTests = struct { hostname: []const u8, testresults: []xschema.XymonResponse };
+
 fn dispatch_routes(r: zap.Request) void {
     // dispatch
     if (r.path) |the_path| {
@@ -183,7 +185,7 @@ fn send_xymon(r: zap.Request) void {
         }
         var n = v.value_ptr.*.append(response);
         if (n) |value| {
-            std.debug.print("cool! {}\n", .{value});
+            _ = value;
         } else |err| {
             std.debug.print("err: {}\n", .{err});
         }
@@ -193,11 +195,10 @@ fn send_xymon(r: zap.Request) void {
 
     var iter = hostMap.iterator();
     while (iter.next()) |item| {
-        std.debug.print("hostname: {s}\n", .{item.key_ptr.*});
         var testiter = item.value_ptr.*.items;
         for (testiter) |value| {
             var d = value.testname;
-            std.debug.print("testname: {s}\n", .{d});
+            // std.debug.print("testname: {s}\n", .{d});
             var n = columns.append(.{ .value = d });
             if (n) |vae| {
                 _ = vae;
@@ -207,30 +208,39 @@ fn send_xymon(r: zap.Request) void {
         }
     }
 
-    // var columns = std.ArrayList([]const u8).init(allocator);
-    // defer columns.deinit();
+    var hostresults = allocator.alloc(XHostTests, 1) catch |err| {
+        std.debug.print("err: {}\n", .{err});
+        std.os.exit(1);
+    };
+    defer allocator.free(hostresults);
+    var h_iter = hostMap.iterator();
+    var idx: usize = 0;
+    while (h_iter.next()) |r_item| {
+        std.debug.print("from the last iter: {s}\n", .{r_item.key_ptr.*});
+        // var testr = r_item.value_ptr.*.items;
+        // for (testr) |vk| {
+        //     std.debug.print("rrrrr: {s}\n", .{vk.color});
+        // }
 
-    // var keys = ncolumns.keyIterator();
+        hostresults[idx] = XHostTests{
+            .hostname = r_item.key_ptr.*,
+            .testresults = r_item.value_ptr.*.items,
+        };
+        idx += 1;
+    }
 
-    // while (keys.next()) |k| {
-    //     var p = columns.append(k.*);
-    //     if (p) |val| {
-    //         _ = val;
-    //     } else |err| {
-    //         std.debug.print("err: {}\n", .{err});
-    //     }
-    // }
     var testnames = allocator.alloc(XTest, 16) catch |err| {
         std.debug.print("err: {}\n", .{err});
         std.os.exit(1);
     };
+
+    defer allocator.free(testnames);
+
     for (resp, 0..) |item, i| {
         testnames[i] = XTest{ .testname = item.testname };
     }
 
-    defer allocator.free(testnames);
-
-    const ret = mustache.build(.{ .responses = resp, .columns = testnames });
+    const ret = mustache.build(.{ .responses = hostresults, .columns = testnames });
 
     defer ret.deinit();
 

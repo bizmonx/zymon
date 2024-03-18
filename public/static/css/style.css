@@ -41,6 +41,9 @@ body {
        overflow: hidden;
  
 }
+.statuscell {
+    text-align: center;
+}
 .rowhead {
     color: #ff7800 !important;
 }

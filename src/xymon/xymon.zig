@@ -40,11 +40,10 @@ pub fn send_request(allocator: *std.mem.Allocator, message: schema.XymonMessage,
         std.debug.print("Error parsing response: {}\n", .{err});
         return error.ParsingFailed;
     };
-    //defer resp_alloc.free(xymon_responses);
 
-    for (xymon_responses) |xresp| {
-        std.debug.print("Test: {s}\n", .{xresp.testname});
-    }
+    // for (xymon_responses) |xresp| {
+    //     std.debug.print("Test: {s}\n", .{xresp.testname});
+    // }
 
     return xymon_responses;
 }

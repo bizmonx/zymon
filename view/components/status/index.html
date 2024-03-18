@@ -10,12 +10,14 @@
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <th class="rowhead" scope="row">{{responses.host}}</th>
             {{#responses}}
-                <td>{{& color}}</td>
-            {{/responses}}
+            <tr>
+                <th class="rowhead" scope="row">{{hostname}}</th>
+                {{#testresults}}
+                <td class="statuscell"><a href="#"><img src="static/img/{{& color}}-recent.gif" alt="{{testname}}" title="{{testname}}" height="22" width="22" border="0"></a></td>
+                {{/testresults}}
             </tr>
+            {{/responses}}
         </tbody>
     </table>        
 </div>
