@@ -2,6 +2,15 @@ const std = @import("std");
 const net = std.net;
 const print = std.debug.print;
 
+pub const XTest = struct { testname: []const u8 };
+
+pub const XHostTests = struct { hostname: []const u8, testresults: []XymonResponse };
+
+pub const XymonQueryParams = struct {
+    host: ?[]const u8,
+    testname: ?[]const u8,
+};
+
 pub const Endpoint = enum {
     status,
     xymondboard,
@@ -114,15 +123,21 @@ pub const XymonResponse = struct {
 
 pub const XymonMessage = struct {
     endpoint: Endpoint,
-    host: []const u8,
-    testname: []const u8,
+    host: ?[]const u8 = "",
+    testname: ?[]const u8 = null,
     color: ?Color = null,
     msg: ?[]const u8 = null,
     lifetime: ?[]const u8 = null,
 
     pub fn parseMessage(self: XymonMessage, alloc: *std.mem.Allocator) ![]u8 {
         var msg: []u8 = "";
-        msg = try std.fmt.allocPrint(alloc.*, "{s} {s}{s}{s} ", .{ self.endpoint.toString(), self.host, "", "" });
+        if ((self.host != null) and (self.testname != null)) {
+            const h = self.host orelse "";
+            const t = self.testname orelse "";
+            msg = try std.fmt.allocPrint(alloc.*, "{s} {s}{s}{s} {s} ", .{ self.endpoint.toString(), h, ".", t, "" });
+        } else {
+            msg = try std.fmt.allocPrint(alloc.*, "{s} {any} {s}{s}", .{ self.endpoint.toString(), self.host, "", "" });
+        }
 
         // switch (self.endpoint) {
         //     Endpoint.xymondboard => {

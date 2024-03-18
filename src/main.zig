@@ -2,18 +2,19 @@ const std = @import("std");
 const zap = @import("zap");
 const Mustache = @import("zap").Mustache;
 const xschema = @import("xymon/schema.zig");
+const render = @import("view/render.zig");
 pub const xymon = @import("xymon/xymon.zig");
+
+// pub const XTest = struct { testname: []const u8 };
+
+// pub const XHostTests = struct { hostname: []const u8, testresults: []xschema.XymonResponse };
 
 var routes: std.StringHashMap(zap.HttpRequestFn) = undefined;
 
-pub const XTest = struct { testname: []const u8 };
-
-pub const XHostTests = struct { hostname: []const u8, testresults: []xschema.XymonResponse };
-
 fn dispatch_routes(r: zap.Request) void {
     // dispatch
-    if (r.path) |the_path| {
-        if (routes.get(the_path)) |route| {
+    if (r.path) |rt| {
+        if (routes.get(rt)) |route| {
             route(r);
             return;
         }
@@ -125,42 +126,62 @@ fn get_home(r: zap.Request) void {
     }
 }
 
-fn send_xymon(r: zap.Request) void {
+fn init_xymon() xschema.XymonServer {
     const xymon_env_hostname = "XYMON_HOST";
     const xymon_env_port = "XYMON_PORT";
-
     // Attempt to read the first environment variable
-    const xymon_host = std.os.getenv(xymon_env_hostname) orelse {
-        std.debug.print("Environment variable '{s}' not found.\n", .{xymon_env_hostname});
-        return;
-    };
+    const xymon_host = std.os.getenv(xymon_env_hostname) orelse "127.0.0.1";
 
     // Attempt to read the second environment variable
-    const xymon_port_str = std.os.getenv(xymon_env_port) orelse {
-        std.debug.print("Environment variable '{s}' not found.\n", .{xymon_env_port});
-        return;
-    };
+    const xymon_port_str = std.os.getenv(xymon_env_port) orelse "1984";
 
-    const xymon_port = std.fmt.parseInt(u16, xymon_port_str, 10) catch {
-        std.debug.print("Failed to parse '{d}' as u32.\n", .{xymon_port_str});
-        return;
-    };
+    var xymon_port: u16 = 1984;
+    var p = std.fmt.parseInt(u16, xymon_port_str, 10);
+    if (p) |val| {
+        xymon_port = val;
+    } else |err| {
+        std.debug.print("err parsing xymon port: {}\n", .{err});
+    }
 
     // Print the values of the environment variables
     std.debug.print("Value of {s} is '{s}'\n", .{ xymon_env_hostname, xymon_host });
     std.debug.print("Value of {s} is '{d}'\n", .{ xymon_env_port, xymon_port });
-
-    var mustache = Mustache.fromFile("view/components/status/index.html") catch return;
-    defer mustache.deinit();
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    var allocator = gpa.allocator(); // General-purpose allocator
 
     var server = xschema.XymonServer{
         .host = xymon_host,
         .port = xymon_port,
     };
 
-    const message = xschema.XymonMessage{ .endpoint = xschema.Endpoint.xymondboard, .host = "7b5d6e9c4ad9", .testname = "zig" };
+    return server;
+}
+
+fn send_xymon(r: zap.Request) void {
+    const query = (r.query);
+    //var queryParams = xschema.XymonQueryParams{ .host = null, .testname = null };
+    var message = xschema.XymonMessage{ .endpoint = xschema.Endpoint.xymondboard };
+    if (query) |q| {
+        std.debug.print("query from request: {s}\n", .{q});
+        var it = std.mem.tokenize(u8, q, "&");
+        while (it.next()) |kv| {
+            var parts = std.mem.split(u8, kv, "=");
+            const key = parts.next().?;
+            const value = parts.next().?;
+
+            if (std.mem.eql(u8, key, "host")) {
+                message.host = value;
+            } else if (std.mem.eql(u8, key, "testname")) {
+                message.testname = value;
+            } else {
+                // Handle unexpected keys or ignore
+            }
+        }
+    }
+
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var allocator = gpa.allocator();
+
+    // const message = xschema.XymonMessage{ .endpoint = xschema.Endpoint.xymondboard, .host = "7b5d6e9c4ad9", .testname = "zig" };
+    const server = init_xymon();
 
     var resp = xymon.send_request(&allocator, message, server) catch return;
     defer allocator.free(resp);
@@ -190,25 +211,8 @@ fn send_xymon(r: zap.Request) void {
             std.debug.print("err: {}\n", .{err});
         }
     }
-    var columns = std.ArrayList(struct { value: []const u8 }).init(allocator);
-    defer columns.deinit();
 
-    var iter = hostMap.iterator();
-    while (iter.next()) |item| {
-        var testiter = item.value_ptr.*.items;
-        for (testiter) |value| {
-            var d = value.testname;
-            // std.debug.print("testname: {s}\n", .{d});
-            var n = columns.append(.{ .value = d });
-            if (n) |vae| {
-                _ = vae;
-            } else |err| {
-                std.debug.print("err: {}\n", .{err});
-            }
-        }
-    }
-
-    var hostresults = allocator.alloc(XHostTests, 1) catch |err| {
+    var hostresults = allocator.alloc(xschema.XHostTests, 1) catch |err| {
         std.debug.print("err: {}\n", .{err});
         std.os.exit(1);
     };
@@ -222,36 +226,17 @@ fn send_xymon(r: zap.Request) void {
         //     std.debug.print("rrrrr: {s}\n", .{vk.color});
         // }
 
-        hostresults[idx] = XHostTests{
+        hostresults[idx] = xschema.XHostTests{
             .hostname = r_item.key_ptr.*,
             .testresults = r_item.value_ptr.*.items,
         };
         idx += 1;
     }
-
-    var testnames = allocator.alloc(XTest, 16) catch |err| {
-        std.debug.print("err: {}\n", .{err});
-        std.os.exit(1);
-    };
-
-    defer allocator.free(testnames);
-
-    for (resp, 0..) |item, i| {
-        testnames[i] = XTest{ .testname = item.testname };
-    }
-
-    const ret = mustache.build(.{ .responses = hostresults, .columns = testnames });
-
-    defer ret.deinit();
-
-    if (r.setContentType(.HTML)) {
-        if (ret.str()) |s| {
-            r.sendBody(s) catch return;
-        } else {
-            r.sendBody("<html><body><h1>mustacheBuild() failed!</h1></body></html>") catch return;
-        }
-    } else |err| {
-        std.debug.print("Error while setting content type: {}\n", .{err});
+    if (message.testname) |t| {
+        std.debug.print("we got testname ### {s} ###\n", .{t});
+        render.renderTest(&allocator, hostresults, resp, r);
+    } else {
+        render.renderHost(&allocator, hostresults, resp, r);
     }
 }
 

@@ -1,4 +1,4 @@
-<div class="row statusrow">
+<div class="row statusrow" id="statuspage">
     <h1>Status</h1>
     <table class="table statustable">
         <thead>
@@ -14,7 +14,7 @@
             <tr>
                 <th class="rowhead" scope="row">{{hostname}}</th>
                 {{#testresults}}
-                <td class="statuscell"><a href="#"><img src="static/img/{{& color}}-recent.gif" alt="{{testname}}" title="{{testname}}" height="22" width="22" border="0"></a></td>
+                <td class="statuscell"><a hx-get="/xymon?host={{hostname}}&testname={{testname}}" hx-target="#statuspage"  href="#"><img src="static/img/{{& color}}-recent.gif" alt="{{testname}}" title="{{testname}}" height="22" width="22" border="0"></a></td>
                 {{/testresults}}
             </tr>
             {{/responses}}
