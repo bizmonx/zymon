@@ -19,4 +19,4 @@ we'll store that in a db first.  Not sure yet what to use to render the charts. 
 we want this to be able to run on a raspberry pi zero.
 
 ## sneak peek
-![first look](https://github.com/bizmonx/zymon/img/firstlook.png)
+![first look](https://github.com/bizmonx/zymon/blob/main/img/firstlook.png)
