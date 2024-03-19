@@ -13,8 +13,10 @@ The part that needs the most work, and not only cometically. The html pages are 
 
 ## How it works
 
-For now, we'll use "xymondboard" calls to get to the data by communicating with xymon on tcp/1984.  
+For now, we'll use "xymondboard" calls to get to the data by communicating with xymon on tcp/1984.
 The history is stored in files on disk, as well as the rrd graphs.  Before bringing the charts to the frontend,
-we'll store that in a db first.  Not sure yet what to use to render the charts.  Grafana is ok, but not if 
+we'll store that in a db first.  Not sure yet what to use to render the charts.  Grafana is ok, but not if
 we want this to be able to run on a raspberry pi zero.
 
+## sneak peek
+![first look](https://github.com/bizmonx/zymon/img/firstlook.png)

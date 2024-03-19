@@ -2,8 +2,8 @@
     <h1>Status</h1>
     <table class="table statustable">
         <thead>
-            <tr class="tablehead">     
-                <th scope="col">hostname</th>   
+            <tr class="tablehead">
+                <th scope="col">hostname</th>
             {{#columns}}
                 <th scope="col">{{testname}}</th>
             {{/columns}}
@@ -14,10 +14,10 @@
             <tr>
                 <th class="rowhead" scope="row">{{hostname}}</th>
                 {{#testresults}}
-                <td class="statuscell"><a hx-get="/xymon?host={{hostname}}&testname={{testname}}" hx-target="#statuspage"  href="#"><img src="static/img/{{& color}}-recent.gif" alt="{{testname}}" title="{{testname}}" height="22" width="22" border="0"></a></td>
+                <td class="statuscell"><a hx-get="/xymon/host?host={{hostname}}&testname={{testname}}" hx-target="#statuspage"  href="#"><img src="static/img/{{& color}}-recent.gif" alt="{{testname}}" title="{{testname}}" height="22" width="22" border="0"></a></td>
                 {{/testresults}}
             </tr>
             {{/responses}}
         </tbody>
-    </table>        
+    </table>
 </div>

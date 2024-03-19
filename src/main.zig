@@ -32,7 +32,8 @@ fn dispatch_routes(r: zap.Request) void {
 fn setup_routes(a: std.mem.Allocator) !void {
     routes = std.StringHashMap(zap.HttpRequestFn).init(a);
     try routes.put("/", get_home);
-    try routes.put("/xymon", send_xymon);
+    try routes.put("/xymon/host", send_xymon_host);
+    try routes.put("/xymon/test", send_xymon_test);
 }
 
 // straight from the zap examples, keeping it for ref for now
@@ -155,7 +156,11 @@ fn init_xymon() xschema.XymonServer {
     return server;
 }
 
-fn send_xymon(r: zap.Request) void {
+fn send_xymon_test(r: zap.Request) void {
+    std.debug.print("xymon test {any}\n", .{r});
+}
+
+fn send_xymon_host(r: zap.Request) void {
     const query = (r.query);
     //var queryParams = xschema.XymonQueryParams{ .host = null, .testname = null };
     var message = xschema.XymonMessage{ .endpoint = xschema.Endpoint.xymondboard };
