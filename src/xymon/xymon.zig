@@ -20,7 +20,7 @@ pub fn send_request(allocator: *std.mem.Allocator, message: schema.XymonMessage,
 
     var writer = stream.writer();
     const size = try writer.write(data);
-    // print("Sending '{s}' to peer, total written: {d} bytes\n", .{ data, size });
+    print("Sending '{s}' to peer, total written: {d} bytes\n", .{ data, size });
 
     // need to tell xymon no more data is following by sending "shutdown" (SHUT_WR = 1)
     _ = try std.os.shutdown(stream.handle, std.os.ShutdownHow.send);

@@ -13,12 +13,13 @@ const Color = enum(u8) {
     yellow = 4,
     red = 5,
 
-    // A helper function within the enum to determine the max color based on priority
+    // determine the max color based on priority
     fn max(a: Color, b: Color) Color {
         if (@intFromEnum(a) > @intFromEnum(b)) return a;
         return b;
     }
 
+    // max color from strings
     fn maxString(a: *[]const u8, b: []const u8) void {
         var colA = parseColor(a.*);
         var colB = parseColor(b);
@@ -84,7 +85,7 @@ fn contains(list: std.ArrayList(xschema.XTest), testname: []const u8) bool {
     return false;
 }
 
-fn test_with_name_or_default(list: []xschema.XymonResponse, testname: []const u8) ?xschema.XymonResponse {
+fn get_test(list: []xschema.XymonResponse, testname: []const u8) ?xschema.XymonResponse {
     for (list) |item| {
         if (std.mem.eql(u8, item.testname, testname)) {
             return item;
@@ -124,7 +125,7 @@ pub fn renderHost(allocator: std.mem.Allocator, hostresults: []xschema.XHostTest
 
         std.mem.sort(xschema.XTest, testnames.items, {}, XTestCmp);
         for (testnames.items) |testitem| {
-            var d = test_with_name_or_default(hres.testresults, testitem.testname);
+            var d = get_test(hres.testresults, testitem.testname);
             var nr = xschema.NormalizedResponse.new(
                 allocator,
                 hres.hostname,
