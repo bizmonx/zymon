@@ -5,7 +5,7 @@ document.body.addEventListener('htmx:afterSwap', function(event) {
         }, 3000); // 3000 milliseconds = 3 seconds
     }
 
-    if (event.target.id ==='main') {
+    if (event.target.id ==='main' || event.target.id === 'statuspage') {
         color = document.getElementById('endcolor');
         bizmonx = document.getElementById('nav-icon');
         bizmonx.style.fill = color.innerHTML;

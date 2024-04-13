@@ -55,19 +55,24 @@ const Color = enum(u8) {
     }
 };
 
-pub fn renderTest(allocator: *std.mem.Allocator, hostresults: []xschema.XHostTests, resp: []xschema.XymonResponse, r: zap.Request) void {
+pub fn renderTest(allocator: std.mem.Allocator, hostresults: []xschema.XHostTests, resp: []xschema.XymonResponse, r: zap.Request) void {
     _ = resp;
-    _ = allocator;
+
     var mustache = Mustache.fromFile("view/components/status/test.html") catch return;
     defer mustache.deinit();
-
-    const ret = mustache.build(.{ .host = hostresults[0].hostname, .testname = hostresults[0].testresults[0].testname, .msg = hostresults[0].testresults[0].msg });
+    var mess = hostresults[0].testresults[0].msg;
+    const size = std.mem.replacementSize(u8, mess, "\\n", "<br>");
+    var output = allocator.alloc(u8, size) catch return;
+    _ = std.mem.replace(u8, mess, "\\n", "<br>", output);
+    // std.debug.print("msg: {s}\n", .{output});
+    const ret = mustache.build(.{ .host = hostresults[0].hostname, .testname = hostresults[0].testresults[0].testname, .msg = output });
 
     defer ret.deinit();
 
     if (r.setContentType(.HTML)) {
         if (ret.str()) |s| {
-            r.sendBody(s) catch return;
+            var allBody = std.fmt.allocPrint(allocator, "<div hx-swap-oob=\"true\" id=\"endcolor\">{s}</div>\n{s}", .{ hostresults[0].testresults[0].color, s }) catch "";
+            r.sendBody(allBody) catch return;
         } else {
             r.sendBody("<html><body><h1>mustacheBuild() failed!</h1></body></html>") catch return;
         }

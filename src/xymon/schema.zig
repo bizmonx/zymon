@@ -104,17 +104,13 @@ pub const XymonResponse = struct {
     host: []const u8,
     testname: []const u8,
     color: []const u8,
-    flags: []const u8,
     lastchange: []const u8,
     logtime: []const u8,
     validtime: []const u8,
     acktime: []const u8,
     disabletime: []const u8,
     sender: []const u8,
-    cookie: []const u8,
     line1: []const u8,
-    ackmsg: []const u8,
-    dismsg: []const u8,
     msg: []const u8,
 
     pub fn parseXResponse(rawResponse: []u8, allocator: *std.mem.Allocator) ![]XymonResponse {
@@ -124,6 +120,7 @@ pub const XymonResponse = struct {
         // Split the raw response into lines
         var lines = std.mem.tokenize(u8, rawResponse, "\n");
         while (lines.next()) |line| {
+            // std.debug.print("message lines: {s}\n", .{line});
             var fields = std.mem.tokenize(u8, line, "|");
 
             // Assuming each line has the correct number of fields
@@ -131,17 +128,13 @@ pub const XymonResponse = struct {
                 .host = fields.next() orelse "",
                 .testname = fields.next() orelse "",
                 .color = fields.next() orelse "",
-                .flags = fields.next() orelse "",
                 .lastchange = fields.next() orelse "",
                 .logtime = fields.next() orelse "",
                 .validtime = fields.next() orelse "",
                 .acktime = fields.next() orelse "",
                 .disabletime = fields.next() orelse "",
                 .sender = fields.next() orelse "",
-                .cookie = fields.next() orelse "",
                 .line1 = fields.next() orelse "",
-                .ackmsg = fields.next() orelse "",
-                .dismsg = fields.next() orelse "",
                 .msg = fields.next() orelse "",
             };
 
@@ -161,11 +154,12 @@ pub const XymonMessage = struct {
     lifetime: ?[]const u8 = null,
 
     pub fn parseMessage(self: XymonMessage, alloc: *std.mem.Allocator) ![]u8 {
+        // std.debug.print("xymon message: {any}\n", .{self});
         var msg: []u8 = "";
         if ((self.host != null) and (self.testname != null)) {
             const h = self.host orelse "";
             const t = self.testname orelse "";
-            msg = try std.fmt.allocPrint(alloc.*, "{s} {s}{s}{s} {s} ", .{ self.endpoint.toString(), h, ".", t, "" });
+            msg = try std.fmt.allocPrint(alloc.*, "{s} {s}{s}{s} {s} ", .{ self.endpoint.toString(), h, ".", t, "fields=hostname,testname,color,lastchange,logtime,validtime,acktime,disabletime,sender,line1,msg" });
         } else {
             msg = try std.fmt.allocPrint(alloc.*, "{s} {any} {s}{s}", .{ self.endpoint.toString(), self.host, "", "" });
         }

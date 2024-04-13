@@ -225,7 +225,7 @@ fn send_xymon_all(r: zap.Request) void {
     //std.debug.print("send_xymon stuff: {any}", .{message});
     if (message.testname) |_| {
         // std.debug.print("we got testname ### {s} ###\n", .{t});
-        render.renderTest(&allocator, hostresults, resp, r);
+        render.renderTest(allocator, hostresults, resp, r);
     } else {
         render.renderHost(allocator, hostresults, resp, r);
     }
@@ -267,6 +267,7 @@ fn send_xymon_host(r: zap.Request) void {
     var hostMap = std.StringHashMap(std.ArrayList(xschema.XymonResponse)).init(allocator);
 
     for (resp) |response| {
+        // std.debug.print("response: {any}\n", .{response});
         var v = hostMap.getOrPut(response.host) catch |err| {
             std.debug.print("err: {}\n", .{err});
             return;
@@ -317,7 +318,8 @@ fn send_xymon_host(r: zap.Request) void {
     }
     if (message.testname) |_| {
         // std.debug.print("we got testname ### {s} ###\n", .{t});
-        render.renderTest(&allocator, hostresults, resp, r);
+        // std.debug.print("we doing test!! {s}\n", .{hostresults[0].testresults[0].msg});
+        render.renderTest(allocator, hostresults, resp, r);
     } else {
         render.renderHost(allocator, hostresults, resp, r);
     }
