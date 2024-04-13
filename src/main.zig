@@ -32,6 +32,7 @@ fn dispatch_routes(r: zap.Request) void {
 fn setup_routes(a: std.mem.Allocator) !void {
     routes = std.StringHashMap(zap.HttpRequestFn).init(a);
     try routes.put("/", get_home);
+    try routes.put("/xymon", send_xymon_all);
     try routes.put("/xymon/host", send_xymon_host);
     try routes.put("/xymon/test", send_xymon_test);
 }
@@ -160,27 +161,10 @@ fn send_xymon_test(r: zap.Request) void {
     std.debug.print("xymon test {any}\n", .{r});
 }
 
-fn send_xymon_host(r: zap.Request) void {
-    const query = (r.query);
-    //var queryParams = xschema.XymonQueryParams{ .host = null, .testname = null };
+fn send_xymon_all(r: zap.Request) void {
     var message = xschema.XymonMessage{ .endpoint = xschema.Endpoint.xymondboard };
-    if (query) |q| {
-        std.debug.print("query from request: {s}\n", .{q});
-        var it = std.mem.tokenize(u8, q, "&");
-        while (it.next()) |kv| {
-            var parts = std.mem.split(u8, kv, "=");
-            const key = parts.next().?;
-            const value = parts.next().?;
 
-            if (std.mem.eql(u8, key, "host")) {
-                message.host = value;
-            } else if (std.mem.eql(u8, key, "testname")) {
-                message.testname = value;
-            } else {
-                // Handle unexpected keys or ignore
-            }
-        }
-    }
+    // std.debug.print("send_all: {}\n", .{message});
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     var allocator = gpa.allocator();
@@ -203,8 +187,8 @@ fn send_xymon_host(r: zap.Request) void {
             v.value_ptr.* = valueMap;
 
             var n = valueMap.append(response);
-            if (n) |value| {
-                std.debug.print("cool! {}\n", .{value});
+            if (n) |_| {
+                // std.debug.print("cool! {}\n", .{value});
             } else |err| {
                 std.debug.print("err: {}\n", .{err});
             }
@@ -217,7 +201,7 @@ fn send_xymon_host(r: zap.Request) void {
         }
     }
 
-    var hostresults = allocator.alloc(xschema.XHostTests, 1) catch |err| {
+    var hostresults = allocator.alloc(xschema.XHostTests, 3) catch |err| {
         std.debug.print("err: {}\n", .{err});
         std.os.exit(1);
     };
@@ -225,7 +209,7 @@ fn send_xymon_host(r: zap.Request) void {
     var h_iter = hostMap.iterator();
     var idx: usize = 0;
     while (h_iter.next()) |r_item| {
-        std.debug.print("from the last iter: {s}\n", .{r_item.key_ptr.*});
+        // std.debug.print("from the last iter: {s}\n", .{r_item.key_ptr.*});
         // var testr = r_item.value_ptr.*.items;
         // for (testr) |vk| {
         //     std.debug.print("rrrrr: {s}\n", .{vk.color});
@@ -237,11 +221,105 @@ fn send_xymon_host(r: zap.Request) void {
         };
         idx += 1;
     }
-    if (message.testname) |t| {
-        std.debug.print("we got testname ### {s} ###\n", .{t});
+    //std.os.exit(1);
+    //std.debug.print("send_xymon stuff: {any}", .{message});
+    if (message.testname) |_| {
+        // std.debug.print("we got testname ### {s} ###\n", .{t});
         render.renderTest(&allocator, hostresults, resp, r);
     } else {
-        render.renderHost(&allocator, hostresults, resp, r);
+        render.renderHost(allocator, hostresults, resp, r);
+    }
+}
+
+fn send_xymon_host(r: zap.Request) void {
+    const query = (r.query);
+    //var queryParams = xschema.XymonQueryParams{ .host = null, .testname = null };
+    var message = xschema.XymonMessage{ .endpoint = xschema.Endpoint.xymondboard };
+    if (query) |q| {
+        // std.debug.print("query from request: {s}\n", .{q});
+        var it = std.mem.tokenize(u8, q, "&");
+        while (it.next()) |kv| {
+            var parts = std.mem.split(u8, kv, "=");
+            const key = parts.next().?;
+            const value = parts.next().?;
+
+            if (std.mem.eql(u8, key, "host")) {
+                message.host = value;
+            } else if (std.mem.eql(u8, key, "testname")) {
+                message.testname = value;
+            } else {
+                // Handle unexpected keys or ignore
+            }
+        }
+    }
+
+    // std.debug.print("send_host: {}\n", .{message});
+
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var allocator = gpa.allocator();
+
+    // const message = xschema.XymonMessage{ .endpoint = xschema.Endpoint.xymondboard, .host = "7b5d6e9c4ad9", .testname = "zig" };
+    const server = init_xymon();
+
+    var resp = xymon.send_request(&allocator, message, server) catch return;
+    defer allocator.free(resp);
+
+    var hostMap = std.StringHashMap(std.ArrayList(xschema.XymonResponse)).init(allocator);
+
+    for (resp) |response| {
+        var v = hostMap.getOrPut(response.host) catch |err| {
+            std.debug.print("err: {}\n", .{err});
+            return;
+        };
+        if (!v.found_existing) {
+            var valueMap = std.ArrayList(xschema.XymonResponse).init(allocator);
+            v.value_ptr.* = valueMap;
+
+            var n = valueMap.append(response);
+            if (n) |_| {
+                // std.debug.print("cool! {}\n", .{value});
+            } else |err| {
+                std.debug.print("err: {}\n", .{err});
+            }
+        }
+        var n = v.value_ptr.*.append(response);
+        if (n) |value| {
+            _ = value;
+        } else |err| {
+            std.debug.print("err: {}\n", .{err});
+        }
+    }
+
+    var hostresults = allocator.alloc(xschema.XHostTests, 3) catch |err| {
+        std.debug.print("err: {}\n", .{err});
+        std.os.exit(1);
+    };
+    defer allocator.free(hostresults);
+    var h_iter = hostMap.iterator();
+    var idx: usize = 0;
+    while (h_iter.next()) |r_item| {
+        // std.debug.print("idx: {}\n", .{idx});
+        // std.debug.print("from the last iter: {s}\n", .{r_item.key_ptr.*});
+        // var testr = r_item.value_ptr.*.items;
+        // for (testr) |vk| {
+        //     std.debug.print("rrrrr: {s}\n", .{vk.color});
+        // }
+        // if (hostresults.len > 0) {
+        //     std.debug.print("we have {d} hosts\n...", .{hostresults.len});
+        // } else {
+        //     std.debug.print("no tests found!", .{});
+        // }
+        hostresults[idx] = xschema.XHostTests{
+            .hostname = r_item.key_ptr.*,
+            .testresults = r_item.value_ptr.*.items,
+        };
+        idx += 1;
+    }
+    if (message.testname) |_| {
+        // std.debug.print("we got testname ### {s} ###\n", .{t});
+        render.renderTest(&allocator, hostresults, resp, r);
+    } else {
+        render.renderHost(allocator, hostresults, resp, r);
     }
 }
 

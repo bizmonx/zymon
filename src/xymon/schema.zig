@@ -57,6 +57,38 @@ pub const XymonResponses = struct {
     results: []XymonResponse,
 };
 
+pub const NormalizedResponse = struct {
+    hostname: []const u8,
+    testname: []const u8,
+    color: []const u8,
+    msg: []const u8,
+    icon: []const u8,
+    get: []const u8,
+    imageLink: []const u8,
+
+    pub fn new(allocator: std.mem.Allocator, hostname: []const u8, testname: []const u8, color: ?[]const u8, msg: ?[]const u8) !NormalizedResponse {
+
+        //var icon_buf: [255]u8 = undefined; // Buffer for icon string
+
+        const icon = if (color) |clr| clr else "none";
+
+        return NormalizedResponse{
+            .hostname = hostname,
+            .testname = testname,
+            .color = color orelse "",
+            .msg = msg orelse "",
+            .icon = std.fmt.allocPrint(allocator, "static/img/{s}-recent.gif", .{color orelse "none"}) catch "", // Ensure this is a slice
+            .get = if (color != null and color.?.len > 0) std.fmt.allocPrint(allocator, "hx-get=\"/xymon/host?host={s}&testname={s}\"", .{ hostname, testname }) catch "" else "",
+            .imageLink = icon, // Assuming this is also a slice
+        };
+    }
+};
+
+pub const XNormalized = struct {
+    hostname: []const u8,
+    testresults: []NormalizedResponse,
+};
+
 pub const XymonServer = struct {
     host: []const u8,
     port: u16,
@@ -98,7 +130,6 @@ pub const XymonResponse = struct {
             var response = XymonResponse{
                 .host = fields.next() orelse "",
                 .testname = fields.next() orelse "",
-                // .color = Color.stringToColor(fields.next().?) catch Color.clear, // need to convert to Color
                 .color = fields.next() orelse "",
                 .flags = fields.next() orelse "",
                 .lastchange = fields.next() orelse "",
@@ -138,16 +169,6 @@ pub const XymonMessage = struct {
         } else {
             msg = try std.fmt.allocPrint(alloc.*, "{s} {any} {s}{s}", .{ self.endpoint.toString(), self.host, "", "" });
         }
-
-        // switch (self.endpoint) {
-        //     Endpoint.xymondboard => {
-        //         msg = try std.fmt.allocPrint(alloc, "{s} {?}{?}{?} ", .{ self.endpoint, self.host, dot, self.testname });
-        //     },
-        //     Endpoint.data => {},
-        //     Endpoint.status => {
-        //         msg = try std.fmt.allocPrint(alloc, "{s}{?}{?} {?}{?}{?} {?} {?} ", .{ self.endpoint, plus, self.lifetime, self.host, dot, self.testname, self.color, self.testname });
-        //     },
-        // }
 
         return msg;
     }

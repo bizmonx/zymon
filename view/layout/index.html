@@ -14,16 +14,18 @@
     </head>
     <body>
         {{& navbar}}
+        <div id="endcolor" style="display: none;" >blue</div>
+
         <div class="row" id="messages">
 
         </div>
 
         <div class="container">
-            <div class="row" id="main">
+            <div class="row" id="main" hx-get="/xymon" hx-target="#main" hx-trigger="load">
             </div>
 
             <div class="d-flex justify-content-center align-items-center mt-5">
-                <button type="button" class="btn btn-primary" hx-get="/xymon/host" hx-target="#main">Get Xymon Status</button>
+                <button type="button" class="btn btn-primary" hx-swap-oob="true" hx-get="/xymon/host" hx-target="#main">Get Xymon Status</button>
 
             </div>
         </div>

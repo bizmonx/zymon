@@ -21,11 +21,11 @@ body {
 }
 
 .navbar {
-    background-color: #b27306 !important;  /* #b27306 #c18004 */
+    background-color: #f7a41e !important; /* <- that zig #b27306 !important;  /* #b27306 #c18004 */
     color: #222;
     font-family: 'Orbitron-Bold', 'Times New Roman';
 }
-.statusrow, .statutable {
+.statusrow, .statustable {
     /*background-color: #222 ;*/
     color: #ff7800;
     font-family: monospace;
@@ -34,12 +34,12 @@ body {
 .tablehead {
     background-color: #ff7800 !important;
     color:  #222 !important;
-    
+
 }
 .statustable  {
        border-radius: 15px 15px 0px 0px !important;
        overflow: hidden;
- 
+
 }
 .statuscell {
     text-align: center;
@@ -50,7 +50,7 @@ body {
 
 .rowhead, .statustable {
     background-color: #222 !important;
-    
+
 }
 
 .statustable {
@@ -62,4 +62,8 @@ body {
 .table>:not(caption)>*>*{
     color: unset;
     background-color: unset;
+}
+
+.nav-icon.nav-icon-red {
+    fill: red;
 }
