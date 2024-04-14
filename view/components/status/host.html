@@ -5,7 +5,18 @@
             <tr class="tablehead">
                 <th scope="col">hostname</th>
             {{#columns}}
-                <th scope="col">{{testname}}</th>
+                <th scope="col">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-zig dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                          {{testname}}
+                        </button>
+                        <ul class="dropdown-menu">
+                          <li><button class="dropdown-item" type="button">Action</button></li>
+                          <li><button class="dropdown-item" type="button">Another action</button></li>
+                          <li><button class="dropdown-item" type="button">Something else here</button></li>
+                        </ul>
+                      </div>                    
+                </th>
             {{/columns}}
             </tr>
         </thead>

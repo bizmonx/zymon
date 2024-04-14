@@ -8,6 +8,8 @@
   - [x] build (sorted) column list from tests of all hosts in scope
   - [x] get all hosts/items in scope (page, group, ..)
   - [x] consolidated color on color indicator (heart top right)
+  - [ ] fix first column, scroll horizontally
+  - [ ] fix header row, scroll vertically
 - [ ] individual test page
   - [x] update color indicator for test view
   - [x] display title, parse content
