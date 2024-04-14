@@ -13,6 +13,7 @@
 - [ ] individual test page
   - [x] update color indicator for test view
   - [x] display title, parse content
+  - [ ] format layout
 
 - [ ] drop a test
 - [ ] display graphs
