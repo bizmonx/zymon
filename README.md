@@ -2,6 +2,22 @@
 
 **W I P: <started>**
 
+## Features
+- [x] communicate with xymon (xymondboard)
+- [ ] display tests for a group of hosts
+  - [x] build (sorted) column list from tests of all hosts in scope
+  - [x] get all hosts/items in scope (page, group, ..)
+  - [x] consolidated color on color indicator (heart top right)
+- [ ] individual test page
+  - [x] update color indicator for test view
+  - [x] display title, parse content
+
+- [ ] drop a test
+- [ ] display graphs
+- [ ] ...
+
+
+
 ## Introduction
 The part that needs the most work, and not only cometically. The html pages are generated at intervals and a hardcoded refresh on the page reloads itself every minute.  This will be more realtime and only what needs to be updated will be updated.
 
